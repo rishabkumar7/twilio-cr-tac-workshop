@@ -4,7 +4,7 @@ Guidelines for AI coding agents (Claude Code, Copilot, Cursor, etc.) working in 
 
 ## Repo overview
 
-Static single-page workshop app — no build step, no package.json, no bundler.
+Static single-page workshop app for the Twilio Agent Connect (TAC) workshop — no build step, no package.json, no bundler.
 
 | File | Purpose |
 |---|---|
@@ -25,7 +25,7 @@ Static single-page workshop app — no build step, no package.json, no bundler.
 
 ## Chapter content (`app.js`)
 
-Workshop chapters are in the `chapters` array near the top of `app.js`. Each chapter has:
+The workshop has three chapters: **Mission Briefing** (setup), **How It Works** (conceptual), and **Agent Connect** (all TAC coding steps). Workshop chapters are in the `chapters` array near the top of `app.js`. Each chapter has:
 
 - `title`, `summary`, `badge`, `intro`
 - `steps[]` — each step has `title`, `body`, `instructions[]`, `codeLabel`, `code`
