@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# editors
+.vscode/
+.idea/
+*.swp
+
+# Azure SWA CLI output
+.swa/
+
+# env files (if ever added locally)
+.env
+.env.local

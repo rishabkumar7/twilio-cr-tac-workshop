@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>twilio/voice-tac</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#chapter-0" aria-label="twilio voice tac home">
+          <span class="brand-mark" aria-hidden="true">t</span>
+          <span>twilio/voice-tac</span>
+        </a>
+
+        <nav class="chapter-tabs" aria-label="Workshop chapters" id="chapterTabs"></nav>
+
+        <div class="top-actions">
+          <div class="runtime-switch" role="group" aria-label="Workshop runtime">
+            <button type="button" data-runtime="python">Python</button>
+            <button type="button" data-runtime="node">Node.js</button>
+          </div>
+          <button class="icon-button" type="button" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
+            <span data-icon="sun-moon" aria-hidden="true"></span>
+          </button>
+          <button class="icon-button" type="button" id="resetProgress" aria-label="Reset progress" title="Reset progress">
+            <span data-icon="rotate-ccw" aria-hidden="true"></span>
+          </button>
+          <button class="builder-toggle" type="button" id="builderToggle" aria-expanded="false" aria-controls="builderPanel">
+            <span data-icon="code-xml" aria-hidden="true"></span>
+            Builder
+          </button>
+        </div>
+      </header>
+
+      <aside class="side-rail" aria-label="Chapter steps">
+        <div class="chapter-kicker" id="chapterKicker">Chapter 1</div>
+        <h1 id="chapterTitle">Mission Briefing</h1>
+        <p id="chapterSummary">Understand what we are building and get set up.</p>
+        <div class="rail-divider"></div>
+        <nav class="step-list" id="stepList" aria-label="Steps in this chapter"></nav>
+
+        <section class="agent-card" aria-labelledby="agentCardTitle">
+          <div class="agent-card-title">
+            <span class="mini-icon" aria-hidden="true"><span data-icon="bot"></span></span>
+            <h2 id="agentCardTitle">Your Agent</h2>
+          </div>
+          <dl>
+            <div>
+              <dt>Name</dt>
+              <dd id="agentNameReadout">Ava</dd>
+            </div>
+            <div>
+              <dt>Voice</dt>
+              <dd id="agentVoiceReadout">Google TTS</dd>
+            </div>
+            <div>
+              <dt>Model</dt>
+              <dd id="agentModelReadout">gemini-2.5-flash</dd>
+            </div>
+            <div>
+              <dt>Tools</dt>
+              <dd id="agentToolsReadout">2 / 2</dd>
+            </div>
+            <div>
+              <dt>Handoff</dt>
+              <dd id="agentHandoffReadout">Yes</dd>
+            </div>
+          </dl>
+          <div class="badges" aria-label="Earned badges" id="badgeList"></div>
+        </section>
+      </aside>
+
+      <main class="content" id="content" tabindex="-1">
+        <section class="chapter-content" id="chapterContent" aria-live="polite"></section>
+      </main>
+
+      <aside class="builder-panel" id="builderPanel" aria-label="Agent builder" aria-hidden="true">
+        <div class="builder-header">
+          <div>
+            <span class="chapter-kicker">Builder</span>
+            <h2>Agent Config</h2>
+          </div>
+          <button class="icon-button" type="button" id="closeBuilder" aria-label="Close builder" title="Close builder">
+            <span data-icon="x" aria-hidden="true"></span>
+          </button>
+        </div>
+
+        <form id="builderForm" class="builder-form">
+          <label>
+            Agent name
+            <input name="name" value="Ava" autocomplete="off" />
+          </label>
+
+          <label>
+            Personality
+            <select name="persona">
+              <option>Helpful retail concierge</option>
+              <option>Patient healthcare scheduler</option>
+              <option>Friendly developer advocate</option>
+              <option>Calm support triage agent</option>
+            </select>
+          </label>
+
+          <label>
+            Voice
+            <select name="voice">
+              <option>Google TTS</option>
+              <option>Polly Joanna</option>
+              <option>Polly Matthew</option>
+              <option>ElevenLabs Rachel</option>
+            </select>
+          </label>
+
+          <label>
+            Language
+            <select name="language">
+              <option>en-US</option>
+              <option>en-GB</option>
+              <option>es-US</option>
+              <option>fr-CA</option>
+            </select>
+          </label>
+
+          <label>
+            Model
+            <select name="model">
+              <option>gemini-2.5-flash</option>
+              <option>gemini-2.5-flash-lite</option>
+              <option>gemini-1.5-flash</option>
+            </select>
+          </label>
+
+          <fieldset>
+            <legend>Capabilities</legend>
+            <label class="check-row">
+              <input type="checkbox" name="toolLookup" checked />
+              <span>Customer lookup tool</span>
+            </label>
+            <label class="check-row">
+              <input type="checkbox" name="toolTicket" checked />
+              <span>Ticket creation tool</span>
+            </label>
+            <label class="check-row">
+              <input type="checkbox" name="handoff" checked />
+              <span>Human handoff</span>
+            </label>
+          </fieldset>
+        </form>
+
+        <div class="config-preview">
+          <div class="preview-title">Generated prompt seed</div>
+          <pre id="promptPreview"></pre>
+          <button class="copy-button" type="button" data-copy-target="promptPreview">
+            <span data-icon="copy" aria-hidden="true"></span>
+            <span>Copy prompt</span>
+          </button>
+        </div>
+      </aside>
+
+      <footer class="progress-bar" aria-label="Workshop progress">
+        <button class="footer-nav footer-nav-prev" type="button" id="prevStep">‹ <span>Previous</span></button>
+        <div class="progress-center">
+          <div class="progress-track" aria-hidden="true"><span id="progressFill"></span></div>
+          <div id="progressLabel">Chapter 1 · Step 1/5 · 0% overall</div>
+        </div>
+        <button class="footer-nav footer-nav-next" type="button" id="nextStep"><span>Next</span> ›</button>
+      </footer>
+    </div>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>
