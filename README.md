@@ -10,6 +10,8 @@ npx serve .
 
 No build step is required.
 
+Deployment only stages the static app files (`index.html`, `app.js`, `styles.css`, and `assets/`) so repository files like `README.md`, `scripts/`, and workflow files are never uploaded to Azure.
+
 ## What is included
 
 - Three workshop chapters: Mission Briefing, How It Works, and Agent Connect.

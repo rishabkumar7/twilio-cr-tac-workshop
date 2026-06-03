@@ -718,11 +718,10 @@ function renderSideRail() {
 }
 
 function renderVoiceVisual() {
-  const serverLabel = state.runtime === "node" ? "Fastify Server" : "FastAPI Server";
   return `
     <div class="mission-overview" aria-label="Voice AI agent system overview">
       <div class="chapter-kicker">System overview</div>
-      <svg class="mission-overview-svg" viewBox="0 0 940 360" role="img" aria-label="Caller reaches Twilio Voice, ConversationRelay opens a WebSocket to your ${escapeHtml(serverLabel)}, the server asks Gemini Flash and tools, then Twilio speaks the response back.">
+      <svg class="mission-overview-svg" viewBox="0 0 940 360" role="img" aria-label="Caller reaches Twilio Voice, ConversationRelay opens a WebSocket to TAC, TAC calls your on_message_ready handler which asks Gemini Flash, then Twilio speaks the response back.">
         <defs>
           <marker id="missionArrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
             <path d="M0 0 L10 5 L0 10z" class="mission-arrow-head" />
@@ -791,8 +790,8 @@ function renderVoiceVisual() {
           <foreignObject x="88" y="18" width="34" height="34">
             <div xmlns="http://www.w3.org/1999/xhtml" class="arch-lucide-icon arch-lucide-icon-hot">${icon("server")}</div>
           </foreignObject>
-          <text x="110" y="72" text-anchor="middle">${escapeHtml(serverLabel)}</text>
-          <text x="110" y="94" text-anchor="middle" class="mission-node-small">/twiml + /ws</text>
+          <text x="110" y="72" text-anchor="middle">TAC Server</text>
+          <text x="110" y="94" text-anchor="middle" class="mission-node-small">TACFastAPIServer</text>
         </g>
 
         <g class="mission-node mission-node-muted" transform="translate(405 236)">
@@ -883,7 +882,8 @@ function renderArchitecture() {
             <foreignObject x="61" y="32" width="30" height="30">
               <div xmlns="http://www.w3.org/1999/xhtml" class="arch-lucide-icon arch-lucide-icon-hot">${icon("server")}</div>
             </foreignObject>
-            <text x="140" y="55" text-anchor="middle">Your Server</text>
+            <text x="140" y="46" text-anchor="middle">TAC Server</text>
+            <text x="140" y="68" text-anchor="middle" class="arch-svg-small">TACFastAPIServer</text>
           </g>
 
           <g class="arch-svg-node arch-svg-tools" transform="translate(410 196)">
@@ -908,13 +908,13 @@ function renderArchitecture() {
 }
 
 function renderFlow(chapter) {
-  const toolsDetail = state.runtime === "node" ? "JavaScript functions add facts or actions." : "Python functions add facts or actions.";
+  const handlerName = state.runtime === "node" ? "onMessageReady" : "on_message_ready";
   const fallback = [
-    ["Webhook", "Twilio asks your app what to do."],
-    ["Socket", "ConversationRelay streams text turns."],
-    ["Model", "Gemini writes the next reply."],
-    ["Tools", toolsDetail],
-    ["Caller", "Twilio speaks the answer."]
+    ["Call", "A caller dials your Twilio number."],
+    ["TAC", "TACFastAPIServer handles webhooks and WebSocket connections."],
+    ["Handler", `${handlerName} receives transcribed caller speech.`],
+    ["Gemini", "Your handler calls Gemini Flash and returns a reply."],
+    ["Voice", "TAC routes the reply back through the voice channel."]
   ];
   const flow = (chapter.flow && (chapter.flow[state.runtime] || chapter.flow)) || fallback;
 
@@ -993,8 +993,8 @@ function renderMissionStep(step) {
     <div class="mission-page">
       ${renderVoiceVisual()}
       <p class="mission-lead">
-        In this workshop, you'll create a <strong>voice AI agent</strong> that you can talk to over a real phone call.
-        It listens to what you say, sends your words to Gemini Flash, and speaks the reply back in real time over Twilio.
+        In this workshop, you'll build a <strong>voice AI agent</strong> using Twilio Agent Connect (TAC).
+        TAC handles all the Twilio plumbing — you write one handler function that calls Gemini and returns a reply.
       </p>
 
       <article class="callout-card">
@@ -1005,8 +1005,8 @@ function renderMissionStep(step) {
       <div class="lesson-page lesson-page-flat">
         <div class="lesson-title-row">
           <div>
-            <h2>Open Your Codespace Now</h2>
-            <p class="lesson-lead">You will be writing code in a few minutes. Open your Codespace in a new tab now so it can warm up in the background.</p>
+            <h2>Open the Sample Repo Now</h2>
+            <p class="lesson-lead">Open the TAC sample repo in a new tab so it is ready when you need it.</p>
           </div>
           ${renderStepAction()}
         </div>
@@ -1015,16 +1015,16 @@ function renderMissionStep(step) {
             <div class="mini-icon">${icon("github")}</div>
             <div>
               <div class="step-kicker">Step 1</div>
-              <strong>Open the workshop repo</strong>
-              <p>Use the copy button and open the repo or Codespace in a new browser tab.</p>
+              <strong>Open the TAC sample repo</strong>
+              <p>Use the copy button and open the repo in a new browser tab.</p>
             </div>
           </article>
           <article class="action-card">
             <div class="mini-icon">${icon("settings")}</div>
             <div>
               <div class="step-kicker">Step 2</div>
-              <strong>Leave it loading in the background</strong>
-              <p>GitHub spins up a cloud VS Code with the repo ready by the time you need it.</p>
+              <strong>Use the builder drawer</strong>
+              <p>Pick your agent name, persona, voice, and model — the builder generates a system prompt you can paste in later.</p>
             </div>
           </article>
         </div>
@@ -1032,7 +1032,7 @@ function renderMissionStep(step) {
       </div>
 
       <aside class="note">
-        <strong>All you need is a GitHub account.</strong> If you do not have one, create it before the coding chapters begin.
+        <strong>All you need is a GitHub account and a Twilio account.</strong> Get both set up before the coding chapter begins.
       </aside>
     </div>
   `;
@@ -1049,7 +1049,7 @@ function renderHowItWorksStep(step) {
         </div>
         ${renderStepAction()}
       </div>
-      <p class="lesson-lead">A phone call becomes a stream of text events. Your server keeps the socket open, Gemini writes the next response, and Twilio turns that text back into audio.</p>
+      <p class="lesson-lead">A phone call becomes a stream of text events. TAC manages the WebSocket, Gemini writes the next response, and Twilio turns that text back into audio — your code only sees the text.</p>
       <div class="inline-diagram">
         <button type="button" class="diagram-chip is-active" data-flow-preview="caller">Caller speaks</button>
         <button type="button" class="diagram-chip" data-flow-preview="relay">Relay sends text</button>
@@ -1090,31 +1090,6 @@ function renderConversationFlowStep(step) {
   `;
 }
 
-function renderChapterOneStep(step) {
-  if (activeStep === 0) return renderMissionStep(step);
-  if (activeStep === 1) return renderHowItWorksStep(step);
-  if (activeStep === 2) return renderConversationFlowStep(step);
-  return renderLessonStep(step);
-}
-
-function renderFirstContactStep(step) {
-  const architecture = activeStep === 0 ? renderArchitecture() : "";
-  return `
-    <div class="lesson-page">
-      ${architecture}
-      <div class="lesson-title-row">
-        <div>
-          <div class="step-kicker">Step ${activeStep + 1}</div>
-          <h2>${escapeHtml(step.title)}</h2>
-        </div>
-        ${renderStepAction()}
-      </div>
-      <p class="lesson-lead">${escapeHtml(step.body)}</p>
-      ${renderInstructionCards(step.instructions)}
-      ${renderCode(step)}
-    </div>
-  `;
-}
 
 function renderCode(step) {
   const label = step.codeLabel;
@@ -1155,6 +1130,47 @@ function renderContent() {
   cleanupThreeScenes();
   const chapter = chapters[activeChapter];
   const step = getRuntimeStep(chapter.steps[activeStep]);
+
+  // Chapter 0 — Mission Briefing
+  if (activeChapter === 0 && activeStep === 0) {
+    chapterContent.innerHTML = renderMissionStep(step);
+    requestAnimationFrame(initThreeScenes);
+    return;
+  }
+
+  // Chapter 1 — How It Works: architecture on step 1, flow+simulator on step 3
+  if (activeChapter === 1 && activeStep === 1) {
+    chapterContent.innerHTML = renderHowItWorksStep(step);
+    requestAnimationFrame(initThreeScenes);
+    return;
+  }
+  if (activeChapter === 1 && activeStep === 3) {
+    chapterContent.innerHTML = renderConversationFlowStep(step);
+    requestAnimationFrame(initThreeScenes);
+    return;
+  }
+
+  // Chapter 2 — Agent Connect: architecture diagram above first step
+  if (activeChapter === 2 && activeStep === 0) {
+    chapterContent.innerHTML = `
+      <div class="lesson-page">
+        ${renderArchitecture()}
+        <div class="lesson-title-row">
+          <div>
+            <div class="step-kicker">Step ${activeStep + 1}</div>
+            <h2>${escapeHtml(step.title)}</h2>
+          </div>
+          ${renderStepAction()}
+        </div>
+        <p class="lesson-lead">${escapeHtml(step.body)}</p>
+        ${renderInstructionCards(step.instructions)}
+        ${renderCode(step)}
+      </div>
+    `;
+    requestAnimationFrame(initThreeScenes);
+    return;
+  }
+
   chapterContent.innerHTML = renderLessonStep(step);
   requestAnimationFrame(initThreeScenes);
 }

@@ -6,6 +6,24 @@ RESOURCE_GROUP="${RESOURCE_GROUP:-rg-twilio-cr-tac}"
 LOCATION="${LOCATION:-eastus2}"
 CREATED_BY="${CREATED_BY:-$(az account show --query user.name -o tsv 2>/dev/null || echo "unknown")}"
 SITE_DIR="$(cd "$(dirname "$0")" && pwd)"
+STAGE_DIR="$(mktemp -d)"
+
+cleanup() {
+  rm -rf "$STAGE_DIR"
+}
+
+trap cleanup EXIT
+
+stage_static_site() {
+  rsync -a --delete \
+    --include '/index.html' \
+    --include '/app.js' \
+    --include '/styles.css' \
+    --include '/assets/' \
+    --include '/assets/***' \
+    --exclude '*' \
+    "$SITE_DIR"/ "$STAGE_DIR"/
+}
 
 # ── prereq checks ────────────────────────────────────────────────────────────
 
@@ -55,13 +73,13 @@ fi
 
 # ── deploy ────────────────────────────────────────────────────────────────────
 
-echo "Deploying '$SITE_DIR' to '$APP_NAME'..."
-# StaticSitesClient requires CWD to not be inside the artifact folder.
-# Run from the parent directory and pass the project folder as a relative path.
-(cd "$(dirname "$SITE_DIR")" && swa deploy "$(basename "$SITE_DIR")" \
+stage_static_site
+
+echo "Deploying static files from '$STAGE_DIR' to '$APP_NAME'..."
+swa deploy "$STAGE_DIR" \
   --app-name "$APP_NAME" \
   --resource-group "$RESOURCE_GROUP" \
-  --env production)
+  --env production
 
 echo ""
 HOSTNAME=$(az staticwebapp show \
