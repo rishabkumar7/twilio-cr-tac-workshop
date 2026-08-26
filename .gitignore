@@ -9,6 +9,10 @@
 # Azure SWA CLI output
 .swa/
 
-# env files (if ever added locally)
+# participant workspace
 .env
 .env.local
+.venv/
+node_modules/
+__pycache__/
+*.pyc

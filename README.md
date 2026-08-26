@@ -1,28 +1,47 @@
-# Twilio Agent Connect Workshop Web App
+# Twilio Agent Connect Workshop
 
-A self-contained workshop web app for guiding attendees through building a voice AI agent with Twilio Agent Connect (TAC) and Gemini Flash. The workshop supports both a Python and a Node.js path.
+This repository contains both the hosted workshop guide and the workspace attendees use to build their agent.
 
-Open `index.html` directly in a browser, or serve the folder locally if you want normal `localhost` URLs:
+## Repository layout
 
-```bash
-npx serve .
+```text
+twilio-cr-tac-workshop/
+├── workshop-app/       Static workshop website and deployment tooling
+├── .env.example        Environment variable template for attendee code
+├── main.py             Python attendees create during the workshop
+└── server.js           Node.js attendees create during the workshop
 ```
 
-No build step is required.
+Attendee code belongs at the repository root. Keep `workshop-app/` unchanged while following the workshop so the guide remains separate from the agent being built.
 
-Deployment only stages the static app files (`index.html`, `app.js`, `styles.css`, and `assets/`) so repository files like `README.md`, `scripts/`, and workflow files are never uploaded to Azure.
+## Start the workshop
 
-## What is included
+Open the hosted Azure Static Web App, or serve the guide locally:
 
-- Three workshop chapters: Mission Briefing, How It Works, and Agent Connect.
-- Copyable Python, Node.js, terminal, and prompt snippets.
-- Runtime switcher for Python or Node.js workshop instructions.
-- Local progress tracking with chapter badges.
-- Interactive agent builder for name, persona, voice, Gemini model, tools, and handoff behavior.
-- Light and dark themes.
+```bash
+npx serve workshop-app
+```
 
-## Source Workshop Repo
+Then prepare the root workspace:
 
-The workshop content is based on the TAC sample repo:
+```bash
+cp .env.example .env
+```
 
-https://github.com/twilio/twilio-agent-connect-python
+Choose Python or Node.js in the workshop guide and create `main.py` or `server.js` at the repository root as directed.
+
+## Workshop app development
+
+The static site has no build step. Validate its embedded code snippets with:
+
+```bash
+node workshop-app/scripts/validate-workshop-code.mjs
+```
+
+Deploy it manually with:
+
+```bash
+bash workshop-app/deploy.sh
+```
+
+Changes under `workshop-app/` pushed to `main` deploy through `.github/workflows/deploy.yml` when the `AZURE_STATIC_WEB_APPS_API_TOKEN` repository secret is configured.

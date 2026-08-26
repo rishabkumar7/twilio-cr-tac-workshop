@@ -10,8 +10,8 @@ const chapters = [
         ["Call", "A caller dials your Twilio number."],
         ["TAC", "TACFastAPIServer handles webhooks and WebSocket connections."],
         ["Handler", "on_message_ready receives transcribed caller speech."],
-        ["Gemini", "Your handler calls Gemini Flash and returns a reply."],
-        ["Voice", "TAC routes the reply back through the voice channel."]
+        ["Gemini", "Your handler streams Gemini Flash response chunks."],
+        ["Voice", "VoiceChannel sends each chunk back to the caller."]
       ],
       node: [
         ["Call", "A caller dials your Twilio number."],
@@ -40,50 +40,78 @@ const chapters = [
           "Have the accounts and local tools ready before the room starts typing code.",
         instructions: [
           "Python 3.10 or newer.",
-          "A Twilio account with a voice-capable phone number, API Key, and API Secret.",
+          "A Twilio account; the next step walks through buying a Voice-capable number.",
+          "A Twilio API Key and API Secret from the Console.",
           "A Google AI Studio API key.",
-          "ngrok or another HTTPS tunnel that can forward to port 8080."
+          "An ngrok account; installation and authentication are covered below."
         ],
         codeLabel: "Accounts",
         code: "Twilio Console: https://console.twilio.com\nGoogle AI Studio: https://aistudio.google.com\nngrok: https://ngrok.com"
       },
       {
-        title: "Clone and Install",
+        title: "Buy a Twilio Phone Number",
         body:
-          "Clone the TAC sample repo and install the dependencies, including the TAC SDK with the server extra.",
+          "Your agent needs a Twilio number that can receive Voice calls. Phone numbers have recurring charges, availability varies, and some countries require regulatory documentation.",
         instructions: [
-          "Clone the repo and enter the directory.",
+          "In Twilio Console, open Phone Numbers → Manage → Buy a number.",
+          "Filter for Voice capability, choose an available number, review its price and requirements, then buy it.",
+          "Copy the number in E.164 format, such as +13125551234, for TWILIO_PHONE_NUMBER.",
+          "On a trial account, verify your personal caller ID first; trial projects are limited to one Twilio number."
+        ],
+        codeLabel: "Twilio Console",
+        code: "https://console.twilio.com\nPhone Numbers → Manage → Buy a number\nCapability: Voice\nSave as: TWILIO_PHONE_NUMBER=\"+1xxxxxxxxxx\""
+      },
+      {
+        title: "Clone the Workshop Repo and Install",
+        body:
+          "Clone this workshop repository and work from its root. The hosted guide stays isolated in workshop-app while main.py and .env live in your attendee workspace.",
+        instructions: [
+          "Clone this workshop repo and enter its root directory.",
           "Create and activate a virtual environment.",
           "Install dependencies including twilio-agent-connect[server]."
         ],
         codeLabel: "Terminal",
         code:
-          "git clone https://github.com/twilio/twilio-agent-connect-python\ncd twilio-agent-connect-python\npython3 -m venv .venv\nsource .venv/bin/activate\npip install twilio-agent-connect[server] google-genai python-dotenv"
+          "git clone https://github.com/rishabkumar7/twilio-cr-tac-workshop\ncd twilio-cr-tac-workshop\npython3 -m venv .venv\nsource .venv/bin/activate\npip install twilio-agent-connect[server] google-genai python-dotenv"
       },
       {
         title: "Configure Environment",
         body:
-          "TAC reads all Twilio credentials and the public domain from environment variables. Copy .env.example and fill in your values.",
+          "TAC reads Twilio credentials and the public domain from environment variables. Relay-only mode is enabled by omitting TWILIO_CONVERSATION_CONFIGURATION_ID.",
         instructions: [
           "Copy .env.example to .env.",
           "Add Account SID, Auth Token, API Key, and API Secret from the Twilio Console.",
-          "Set TWILIO_VOICE_PUBLIC_DOMAIN to your ngrok domain without https://."
+          "Set TWILIO_VOICE_PUBLIC_DOMAIN to your ngrok domain without https://.",
+          "Do not set TWILIO_CONVERSATION_CONFIGURATION_ID for this relay-only workshop."
         ],
         codeLabel: ".env",
         code:
           "TWILIO_ACCOUNT_SID=\"ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"\nTWILIO_AUTH_TOKEN=\"your-auth-token\"\nTWILIO_API_KEY=\"SKxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"\nTWILIO_API_SECRET=\"your-api-secret\"\nTWILIO_PHONE_NUMBER=\"+1xxxxxxxxxx\"\nTWILIO_VOICE_PUBLIC_DOMAIN=\"your-ngrok-domain.ngrok-free.app\"\nGOOGLE_API_KEY=\"your-google-ai-api-key\"\nAGENT_NAME=\"Ava\"\nGEMINI_MODEL=\"gemini-2.5-flash\""
       },
       {
-        title: "Start ngrok",
+        title: "Install and Connect ngrok",
         body:
-          "TAC uses TWILIO_VOICE_PUBLIC_DOMAIN to build the TwiML WebSocket URL automatically. Start ngrok first so you can copy the domain into .env.",
+          "ngrok gives Twilio a public HTTPS address that forwards to the TAC server on your computer. Create a free ngrok account before authenticating the CLI.",
         instructions: [
-          "Start ngrok forwarding to port 8080.",
+          "Install the ngrok Agent CLI; on macOS, use Homebrew, or use ngrok's download page for Linux and Windows.",
+          "Copy the authtoken from the ngrok dashboard and add it to the CLI configuration.",
+          "Run ngrok version to confirm the CLI is ready."
+        ],
+        codeLabel: "ngrok setup",
+        code: "Download: https://ngrok.com/download\n\nbrew install ngrok\nngrok config add-authtoken YOUR_NGROK_AUTHTOKEN\nngrok version"
+      },
+      {
+        title: "Start ngrok and Connect Voice",
+        body:
+          "TAC uses TWILIO_VOICE_PUBLIC_DOMAIN to build the ConversationRelay WebSocket URL. Twilio sends inbound calls to TAC's /twiml endpoint.",
+        instructions: [
+          "Start ngrok forwarding to TAC's default port, 8000.",
           "Copy the hostname only (no https://) into TWILIO_VOICE_PUBLIC_DOMAIN in .env.",
+          "Open the purchased number in Twilio Console and set A call comes in to Webhook, https://your-ngrok-domain.ngrok-free.app/twiml, HTTP POST.",
           "Leave ngrok running — TAC needs the tunnel active when calls come in."
         ],
         codeLabel: "Terminal",
-        code: "ngrok http 8080\n\n# copy the hostname into .env:\nTWILIO_VOICE_PUBLIC_DOMAIN=\"your-ngrok-domain.ngrok-free.app\""
+        code: "ngrok http 8000\n\nTWILIO_VOICE_PUBLIC_DOMAIN=\"your-ngrok-domain.ngrok-free.app\"\nVOICE_WEBHOOK=\"https://your-ngrok-domain.ngrok-free.app/twiml\""
       }
     ],
     quiz: {
@@ -104,7 +132,7 @@ const chapters = [
         ["Relay", "Twilio opens a WebSocket and streams transcribed speech."],
         ["TAC", "TACFastAPIServer absorbs the webhook and WebSocket complexity."],
         ["Handler", "on_message_ready fires with the caller's words as a string."],
-        ["LLM", "Your handler calls any model and returns the reply text."]
+        ["LLM", "Your handler streams model output through VoiceChannel."]
       ],
       node: [
         ["Call", "A caller dials your Twilio number."],
@@ -143,15 +171,15 @@ const chapters = [
       {
         title: "The on_message_ready Contract",
         body:
-          "Your entire integration is one async function. TAC calls it with three arguments and speaks whatever string you return back to the caller.",
+          "TAC calls your async handler with three arguments. In relay-only streaming mode, the handler returns None and sends an async token generator through VoiceChannel.",
         instructions: [
-          "message — the caller's transcribed speech as a plain string.",
+          "user_message — the caller's transcribed speech as a plain string.",
           "context — a ConversationSession object; use context.conversation_id to key per-call state.",
-          "memory — Conversation Memory data (None in relay-only mode)."
+          "memory_response — unused in relay-only mode, but retained in the callback signature."
         ],
         codeLabel: "Handler signature",
         code:
-          "async def handle_message_ready(\n    message: str,\n    context: ConversationSession,\n    memory: TACMemoryResponse | None,\n) -> str:\n    # call your LLM here\n    return reply_text"
+          "async def handle_message_ready(\n    user_message: str,\n    context: ConversationSession,\n    memory_response: TACMemoryResponse | None,\n) -> None:\n    conv_id = context.conversation_id\n    await voice_channel.send_response(conv_id, stream_tokens())"
       },
       {
         title: "Conversation Flow",
@@ -159,12 +187,12 @@ const chapters = [
           "Trace one complete voice turn to build the mental model you will use while coding.",
         instructions: [
           "Caller speaks → Twilio transcribes → TAC calls on_message_ready.",
-          "Your handler calls Gemini and returns the reply string.",
-          "TAC sends the reply through the voice channel → Twilio speaks it."
+          "Your handler streams Gemini chunks through voice_channel.send_response().",
+          "Twilio speaks the streamed text as it arrives."
         ],
         codeLabel: "Full turn",
         code:
-          "Caller: \"What can you help me with?\"\n→ TAC receives transcribed text\n→ on_message_ready(\"What can you help me with?\", context, memory)\n→ Gemini replies: \"I can answer questions and create support tickets.\"\n→ TAC routes reply → Twilio speaks it to the caller"
+          "Caller: \"What can you help me with?\"\n→ TAC receives transcribed text\n→ on_message_ready(\"What can you help me with?\", context, memory_response)\n→ Gemini streams: \"I can answer questions and create support tickets.\"\n→ VoiceChannel sends chunks → Twilio speaks them to the caller"
       }
     ],
     quiz: {
@@ -182,16 +210,16 @@ const chapters = [
     flow: {
       python: [
         ["TAC", "TACFastAPIServer handles webhooks and WebSocket connections."],
-        ["Channel", "VoiceChannel or SMSChannel abstracts the transport."],
+        ["Channel", "VoiceChannel handles ConversationRelay transport."],
         ["Handler", "on_message_ready receives transcribed speech."],
-        ["LLM", "Your code calls Gemini (or any model) and returns a reply."],
-        ["Route", "TAC sends the reply back through the correct channel."]
+        ["LLM", "Gemini can call lookup_customer before streaming."],
+        ["Route", "VoiceChannel sends the chunks back to the caller."]
       ],
       node: [
         ["TAC", "TAC server handles webhooks and WebSocket connections."],
         ["Channel", "VoiceChannel or SMSChannel abstracts the transport."],
         ["Handler", "onMessageReady receives transcribed speech."],
-        ["LLM", "Your code calls Gemini (or any model) and returns a reply."],
+        ["LLM", "Gemini can call lookupCustomer before returning."],
         ["Route", "TAC sends the reply back through the correct channel."]
       ]
     },
@@ -215,7 +243,7 @@ const chapters = [
         instructions: [
           "Add your Twilio Account SID, Auth Token, API Key, and API Secret.",
           "Set TWILIO_PHONE_NUMBER and TWILIO_VOICE_PUBLIC_DOMAIN (ngrok domain without https://).",
-          "Keep GOOGLE_API_KEY from the earlier chapters."
+          "Keep GOOGLE_API_KEY and leave TWILIO_CONVERSATION_CONFIGURATION_ID unset."
         ],
         codeLabel: ".env",
         code:
@@ -224,28 +252,42 @@ const chapters = [
       {
         title: "Initialise TAC and Channels",
         body:
-          "Create a TAC instance, attach a VoiceChannel, and wire up a TACFastAPIServer. This replaces the manual FastAPI app, the /twiml route, and the raw WebSocket handler from the earlier chapters.",
+          "Create a TAC instance in relay-only mode and attach a VoiceChannel. This replaces the manual FastAPI app, the /twiml route, and the raw WebSocket handler.",
         instructions: [
-          "Import TAC, TACConfig from tac; VoiceChannel from tac.channels.voice; TACFastAPIServer from tac.server.",
+          "Import the TAC session and memory types used by the callback signature.",
           "Load config from environment variables with TACConfig.from_env().",
-          "Pass the voice channel to TACFastAPIServer so it handles incoming calls."
+          "Assert that Conversation Orchestrator is disabled, then create VoiceChannel."
         ],
         codeLabel: "main.py",
         code:
-          "import os\nfrom dotenv import load_dotenv\nfrom google import genai\nfrom tac import TAC, TACConfig\nfrom tac.channels.voice import VoiceChannel\nfrom tac.server import TACFastAPIServer\n\nload_dotenv()\n\nMODEL = os.getenv(\"GEMINI_MODEL\", \"gemini-2.5-flash\")\nAGENT_NAME = os.getenv(\"AGENT_NAME\", \"Ava\")\nGOOGLE_API_KEY = os.getenv(\"GOOGLE_API_KEY\")\n\nclient = genai.Client(api_key=GOOGLE_API_KEY)\n\nSYSTEM_PROMPT = f\"\"\"\nYou are {AGENT_NAME}, a helpful voice AI agent on a live phone call.\nSpeak in short, natural sentences. Ask one question at a time.\nDo not use markdown, bullet points, links, or code blocks.\n\"\"\".strip()\n\ntac = TAC(config=TACConfig.from_env())\nvoice_channel = VoiceChannel(tac)"
+          "import os\nfrom collections.abc import AsyncGenerator\n\nfrom dotenv import load_dotenv\nfrom google import genai\nfrom tac import TAC, TACConfig\nfrom tac.channels.voice import VoiceChannel\nfrom tac.models.session import ConversationSession\nfrom tac.models.tac import TACMemoryResponse\nfrom tac.server import TACFastAPIServer\n\nload_dotenv()\n\nMODEL = os.getenv(\"GEMINI_MODEL\", \"gemini-2.5-flash\")\nAGENT_NAME = os.getenv(\"AGENT_NAME\", \"Ava\")\nclient = genai.Client(api_key=os.getenv(\"GOOGLE_API_KEY\"))\n\nSYSTEM_PROMPT = f\"\"\"\nYou are {AGENT_NAME}, a helpful voice AI agent on a live phone call.\nSpeak in short, natural sentences. Ask one question at a time.\nUse lookup_customer when the caller asks about an account.\nAsk for their customer ID if they have not provided it.\nDo not use markdown, bullet points, links, or code blocks.\n\"\"\".strip()\n\ntac = TAC(config=TACConfig.from_env())\nassert not tac.is_orchestrator_enabled(), (\n    \"This workshop expects relay-only mode — \"\n    \"unset TWILIO_CONVERSATION_CONFIGURATION_ID.\"\n)\nvoice_channel = VoiceChannel(tac)"
+      },
+      {
+        title: "Create a Callable Tool",
+        body:
+          "A Gemini tool can be an ordinary typed Python function. Gemini uses its name, docstring, and parameter types to decide when to call it and which arguments to provide.",
+        instructions: [
+          "Define lookup_customer with a typed customer_id parameter and a clear docstring.",
+          "Return JSON-serializable data so Gemini can incorporate the result into its answer.",
+          "Use the fake record for the workshop; a real app must call an authenticated customer system.",
+          "Try it by saying: Look up customer CUST-1001."
+        ],
+        codeLabel: "main.py",
+        code:
+          "CUSTOMERS = {\n    \"CUST-1001\": {\n        \"name\": \"Sam Rivera\",\n        \"plan\": \"Pro\",\n        \"account_status\": \"active\",\n    }\n}\n\n\ndef lookup_customer(customer_id: str) -> dict[str, str]:\n    \"\"\"Look up a customer account by customer ID.\"\"\"\n    customer = CUSTOMERS.get(customer_id.upper())\n    if customer is None:\n        return {\"status\": \"not_found\", \"customer_id\": customer_id}\n    return {\"status\": \"found\", **customer}"
       },
       {
         title: "Write the Message Handler",
         body:
-          "The on_message_ready callback receives transcribed caller speech and must return the text TAC will speak back. The same function works regardless of channel — voice or SMS.",
+          "Add lookup_customer to the Gemini chat configuration. Gemini automatically calls it when account data is needed, then the handler streams Gemini's grounded response through VoiceChannel.",
         instructions: [
           "Register the handler with tac.on_message_ready().",
-          "Call Gemini inside the handler and return the reply text.",
-          "context is a ConversationSession object — use context.conversation_id to key per-call state."
+          "Pass lookup_customer in the tools list and stream the final Gemini response.",
+          "Use context.conversation_id to key state, then clean it up with tac.on_conversation_ended()."
         ],
         codeLabel: "main.py",
         code:
-          "sessions = {}\n\nasync def handle_message_ready(message, context, memory):\n    conv_id = context.conversation_id\n\n    if conv_id not in sessions:\n        sessions[conv_id] = client.chats.create(\n            model=MODEL,\n            config={\"system_instruction\": SYSTEM_PROMPT},\n        )\n\n    chat = sessions[conv_id]\n    try:\n        response = chat.send_message(message)\n        return (response.text or \"I am sorry, could you say that again?\").strip()\n    except Exception as error:\n        print(\"Gemini error:\", error)\n        return \"I had trouble thinking through that. Could you repeat it?\"\n\ntac.on_message_ready(handle_message_ready)"
+          "sessions = {}\n\n\nasync def handle_message_ready(\n    user_message: str,\n    context: ConversationSession,\n    memory_response: TACMemoryResponse | None,\n) -> None:\n    conv_id = context.conversation_id\n\n    if conv_id not in sessions:\n        sessions[conv_id] = client.aio.chats.create(\n            model=MODEL,\n            config={\n                \"system_instruction\": SYSTEM_PROMPT,\n                \"tools\": [lookup_customer],\n            },\n        )\n\n    chat = sessions[conv_id]\n\n    async def stream_tokens() -> AsyncGenerator[str, None]:\n        try:\n            async for chunk in await chat.send_message_stream(user_message):\n                if chunk.text:\n                    yield chunk.text\n        except Exception as error:\n            print(\"Gemini error:\", error)\n            yield \"I had trouble thinking through that. Could you repeat it?\"\n\n    await voice_channel.send_response(conv_id, stream_tokens())\n\n\ntac.on_message_ready(handle_message_ready)\n\n\nasync def handle_conversation_ended(context: ConversationSession) -> None:\n    sessions.pop(context.conversation_id, None)\n\n\ntac.on_conversation_ended(handle_conversation_ended)"
       },
       {
         title: "Start the TAC Server",
@@ -253,12 +295,12 @@ const chapters = [
           "TACFastAPIServer mounts the webhook and WebSocket routes automatically. Replace the uvicorn main:app invocation with the new server startup.",
         instructions: [
           "Create the TACFastAPIServer, passing tac and the voice channel.",
-          "Call server.start() — this replaces the manual uvicorn command.",
-          "Point your Twilio number's voice webhook at the ngrok URL as before."
+          "Start the server inside a __main__ guard, matching the relay-only example.",
+          "TAC listens on port 8000 by default; confirm the Twilio voice webhook is the ngrok domain plus /twiml using HTTP POST."
         ],
         codeLabel: "main.py",
         code:
-          "server = TACFastAPIServer(\n    tac=tac,\n    voice_channel=voice_channel,\n)\nserver.start()"
+          "if __name__ == \"__main__\":\n    server = TACFastAPIServer(tac=tac, voice_channel=voice_channel)\n    server.start()"
       }
     ],
     quiz: {
@@ -270,10 +312,14 @@ const chapters = [
 ];
 
 const nodeCodeOverrides = {
-  "0:2": {
+  "0:3": {
     label: "Terminal",
     code:
-      "git clone https://github.com/twilio/twilio-agent-connect-python\ncd twilio-agent-connect-python\nnpm init -y\nnpm pkg set type=module scripts.start=\"node server.js\"\nnpm install twilio-agent-connect @google/genai dotenv"
+      "git clone https://github.com/rishabkumar7/twilio-cr-tac-workshop\ncd twilio-cr-tac-workshop\nnpm init -y\nnpm pkg set type=module scripts.start=\"node server.js\"\nnpm install twilio-agent-connect @google/genai dotenv"
+  },
+  "0:6": {
+    label: "Terminal",
+    code: "ngrok http 8080\n\nTWILIO_VOICE_PUBLIC_DOMAIN=\"your-ngrok-domain.ngrok-free.app\"\nVOICE_WEBHOOK=\"https://your-ngrok-domain.ngrok-free.app/twiml\""
   },
   "2:0": {
     label: "Install TAC",
@@ -282,14 +328,19 @@ const nodeCodeOverrides = {
   "2:2": {
     label: "server.js",
     code:
-      "import \"dotenv/config\";\nimport { GoogleGenAI } from \"@google/genai\";\nimport { TAC, TACConfig } from \"twilio-agent-connect\";\nimport { VoiceChannel } from \"twilio-agent-connect/channels/voice\";\nimport { TACFastAPIServer } from \"twilio-agent-connect/server\";\n\nconst MODEL = process.env.GEMINI_MODEL || \"gemini-2.5-flash\";\nconst AGENT_NAME = process.env.AGENT_NAME || \"Ava\";\nconst ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });\n\nconst SYSTEM_PROMPT = `\nYou are ${AGENT_NAME}, a helpful voice AI agent on a live phone call.\nSpeak in short, natural sentences. Ask one question at a time.\nDo not use markdown, bullet points, links, or code blocks.\n`.trim();\n\nconst tac = new TAC({ config: TACConfig.fromEnv() });\nconst voiceChannel = new VoiceChannel(tac);"
+      "import \"dotenv/config\";\nimport { GoogleGenAI } from \"@google/genai\";\nimport { TAC, TACConfig } from \"twilio-agent-connect\";\nimport { VoiceChannel } from \"twilio-agent-connect/channels/voice\";\nimport { TACFastAPIServer } from \"twilio-agent-connect/server\";\n\nconst MODEL = process.env.GEMINI_MODEL || \"gemini-2.5-flash\";\nconst AGENT_NAME = process.env.AGENT_NAME || \"Ava\";\nconst ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });\n\nconst SYSTEM_PROMPT = `\nYou are ${AGENT_NAME}, a helpful voice AI agent on a live phone call.\nSpeak in short, natural sentences. Ask one question at a time.\nUse lookupCustomer when the caller asks about an account.\nAsk for their customer ID if they have not provided it.\nDo not use markdown, bullet points, links, or code blocks.\n`.trim();\n\nconst tac = new TAC({ config: TACConfig.fromEnv() });\nconst voiceChannel = new VoiceChannel(tac);"
   },
   "2:3": {
     label: "server.js",
     code:
-      "const sessions = new Map();\n\nasync function handleMessageReady(message, context, memory) {\n  const convId = context.conversation_id;\n\n  if (!sessions.has(convId)) {\n    sessions.set(convId, ai.chats.create({\n      model: MODEL,\n      config: { systemInstruction: SYSTEM_PROMPT },\n    }));\n  }\n\n  const chat = sessions.get(convId);\n  try {\n    const response = await chat.sendMessage({ message });\n    return (response.text || \"I am sorry, could you say that again?\").trim();\n  } catch (error) {\n    console.error(\"Gemini error:\", error);\n    return \"I had trouble thinking through that. Could you repeat it?\";\n  }\n}\n\ntac.onMessageReady(handleMessageReady);"
+      "const CUSTOMERS = new Map([\n  [\"CUST-1001\", {\n    name: \"Sam Rivera\",\n    plan: \"Pro\",\n    accountStatus: \"active\",\n  }],\n]);\n\nconst lookupCustomerDeclaration = {\n  name: \"lookupCustomer\",\n  description: \"Look up a customer account by customer ID.\",\n  parametersJsonSchema: {\n    type: \"object\",\n    properties: {\n      customerId: { type: \"string\" },\n    },\n    required: [\"customerId\"],\n  },\n};\n\nfunction lookupCustomer(customerId) {\n  const customer = CUSTOMERS.get(customerId.toUpperCase());\n  return customer\n    ? { status: \"found\", ...customer }\n    : { status: \"not_found\", customerId };\n}"
   },
   "2:4": {
+    label: "server.js",
+    code:
+      "const sessions = new Map();\n\nasync function handleMessageReady(message, context, memory) {\n  const convId = context.conversation_id;\n\n  if (!sessions.has(convId)) {\n    sessions.set(convId, ai.chats.create({\n      model: MODEL,\n      config: {\n        systemInstruction: SYSTEM_PROMPT,\n        tools: [{ functionDeclarations: [lookupCustomerDeclaration] }],\n      },\n    }));\n  }\n\n  const chat = sessions.get(convId);\n  try {\n    let response = await chat.sendMessage({ message });\n    for (const call of response.functionCalls || []) {\n      if (call.name !== \"lookupCustomer\") continue;\n      const customerId = String(call.args?.customerId || \"\");\n      const output = lookupCustomer(customerId);\n      response = await chat.sendMessage({\n        message: [{\n          functionResponse: {\n            id: call.id,\n            name: call.name,\n            response: { output },\n          },\n        }],\n      });\n    }\n    return (response.text || \"I am sorry, could you say that again?\").trim();\n  } catch (error) {\n    console.error(\"Gemini error:\", error);\n    return \"I had trouble thinking through that. Could you repeat it?\";\n  }\n}\n\ntac.onMessageReady(handleMessageReady);"
+  },
+  "2:5": {
     label: "server.js",
     code:
       "const server = new TACFastAPIServer({\n  tac,\n  voiceChannel,\n});\nserver.start();"
@@ -309,18 +360,52 @@ const nodeTextOverrides = {
   "0:1": {
     instructions: [
       "Node.js 20 or newer.",
-      "A Twilio account with a voice-capable phone number, API Key, and API Secret.",
+      "A Twilio account; the next step walks through buying a Voice-capable number.",
+      "A Twilio API Key and API Secret from the Console.",
       "A Google AI Studio API key.",
-      "ngrok or another HTTPS tunnel that can forward to port 8080."
+      "An ngrok account; installation and authentication are covered below."
     ]
   },
-  "0:2": {
+  "0:3": {
     body:
-      "For the Node.js path, initialise a fresh project and install TAC plus the Gemini SDK.",
+      "For the Node.js path, clone this workshop repository and initialise the attendee workspace at its root.",
     instructions: [
-      "Create a new Node.js project folder with ES modules enabled.",
+      "Clone this workshop repo, enter its root, and enable ES modules there.",
       "Install twilio-agent-connect and @google/genai.",
       "Add a start script that runs server.js."
+    ]
+  },
+  "0:4": {
+    body:
+      "TAC reads all Twilio credentials and the public domain from environment variables. Copy .env.example and fill in your values.",
+    instructions: [
+      "Copy .env.example to .env.",
+      "Add Account SID, Auth Token, API Key, and API Secret from the Twilio Console.",
+      "Set TWILIO_VOICE_PUBLIC_DOMAIN to your ngrok domain without https://."
+    ]
+  },
+  "0:6": {
+    instructions: [
+      "Start ngrok forwarding to port 8080.",
+      "Copy the hostname only (no https://) into TWILIO_VOICE_PUBLIC_DOMAIN in .env.",
+      "Open the purchased number in Twilio Console and set A call comes in to Webhook, https://your-ngrok-domain.ngrok-free.app/twiml, HTTP POST.",
+      "Leave ngrok running — TAC needs the tunnel active when calls come in."
+    ]
+  },
+  "1:2": {
+    body:
+      "Your entire integration is one async function. TAC calls it with three arguments and speaks whatever string you return back to the caller.",
+    instructions: [
+      "message — the caller's transcribed speech as a plain string.",
+      "context — a ConversationSession object; use context.conversation_id to key per-call state.",
+      "memory — Conversation Memory data (None in relay-only mode)."
+    ]
+  },
+  "1:3": {
+    instructions: [
+      "Caller speaks → Twilio transcribes → TAC calls onMessageReady.",
+      "Your handler calls Gemini and returns the reply string.",
+      "TAC sends the reply through the voice channel → Twilio speaks it."
     ]
   },
   "2:0": {
@@ -349,19 +434,31 @@ const nodeTextOverrides = {
     ]
   },
   "2:3": {
+    body:
+      "Declare lookupCustomer for Gemini and provide the local function that executes the lookup.",
     instructions: [
-      "Register the handler with tac.onMessageReady().",
-      "Call Gemini inside the handler and return the reply text.",
-      "Use context.conversation_id to key per-call Gemini chat sessions."
+      "Describe the function and its customerId parameter with JSON Schema.",
+      "Return plain JSON data that Gemini can use in its answer.",
+      "Use the fake record for the workshop; a real app must call an authenticated customer system.",
+      "Try it by saying: Look up customer CUST-1001."
     ]
   },
   "2:4": {
+    body:
+      "Add the lookupCustomer declaration to the Gemini chat, execute requested function calls, and send each result back to Gemini before returning its answer.",
+    instructions: [
+      "Register the handler with tac.onMessageReady().",
+      "Execute lookupCustomer when Gemini returns that function call.",
+      "Use context.conversation_id to key per-call Gemini chat sessions."
+    ]
+  },
+  "2:5": {
     body:
       "TACFastAPIServer mounts webhook and WebSocket routes automatically. Call server.start() to launch.",
     instructions: [
       "Create the TACFastAPIServer, passing tac and the voice channel.",
       "Call server.start() — TAC starts listening on port 8080.",
-      "Point your Twilio number's voice webhook at the ngrok URL."
+      "Confirm the Twilio voice webhook is the ngrok domain plus /twiml using HTTP POST."
     ]
   }
 };
@@ -1754,7 +1851,7 @@ document.addEventListener("click", (event) => {
     const output = {
       question: "Caller: What can you help me with? -> Agent: I can answer questions, look up simple account details, and create a support ticket.",
       memory: "Caller: My name is Rishab. -> Later: The agent should remember and use Rishab naturally.",
-      tool: "Caller: Create a ticket for a damaged shipment. -> Server: runs create_ticket(), then Gemini summarizes the result."
+      tool: "Caller: Look up customer CUST-1001. -> Gemini calls lookup_customer(), then speaks the returned account details."
     };
     document.querySelectorAll("[data-sim]").forEach((button) => {
       button.classList.toggle("is-active", button === simButton);
