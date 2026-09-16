@@ -9,6 +9,7 @@ Monorepo for the Twilio Agent Connect (TAC) workshop. `workshop-app/` contains t
 | File | Purpose |
 |---|---|
 | `workshop-app/index.html` | Workshop shell markup and layout |
+| `workshop-app/config.js` | Deployment-time workshop feature flags |
 | `workshop-app/styles.css` | All workshop styles (dark/light theme, layout, components) |
 | `workshop-app/app.js` | Workshop content, rendering, state, and interactions |
 | `workshop-app/assets/` | Static workshop assets (e.g. `gemini-logo.webp`) |
@@ -44,7 +45,7 @@ node workshop-app/scripts/validate-workshop-code.mjs
 
 ## State and localStorage
 
-Progress, builder settings, runtime choice, and theme are stored in `localStorage` under the key `twilio-cr-tac-state-v1`. Do not rename this key without also clearing old state in `loadState()`.
+Progress, builder settings, runtime choice, and theme are stored in `localStorage` under the key `twilio-cr-tac-state-v1`. Do not rename this key without also clearing old state in `loadState()`. The Node.js runtime must remain inaccessible when `config.js` sets `enableNode` to `false`, including for saved Node.js state.
 
 ## Styling
 
@@ -52,8 +53,8 @@ All CSS variables for colors and spacing are defined in `:root` and `[data-theme
 
 ## Deployment
 
-- **Manual:** `bash workshop-app/deploy.sh` — provisions Azure resource group + Static Web App if they do not exist, then deploys only static guide files.
-- **CI:** Changes under `workshop-app/` pushed to `main` trigger `.github/workflows/deploy.yml`, which stages only static guide files. The `AZURE_STATIC_WEB_APPS_API_TOKEN` secret must be set in the repo settings.
+- **Manual:** `bash workshop-app/deploy.sh` — provisions Azure resource group + Static Web App if they do not exist, then deploys only static guide files. Set `ENABLE_NODE_WORKSHOP=true` to expose the optional Node.js path.
+- **CI:** Changes under `workshop-app/` pushed to `main` trigger `.github/workflows/deploy.yml`, which stages only static guide files. The `AZURE_STATIC_WEB_APPS_API_TOKEN` secret must be set in the repo settings. The optional `ENABLE_NODE_WORKSHOP` repository variable controls whether the Node.js path is exposed.
 - Default Azure app name: `twilio-cr-tac`. Default resource group: `rg-twilio-cr-tac`.
 
 ## What agents should not do

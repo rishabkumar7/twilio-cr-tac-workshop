@@ -5,6 +5,7 @@ APP_NAME="${APP_NAME:-twilio-cr-tac}"
 RESOURCE_GROUP="${RESOURCE_GROUP:-rg-twilio-cr-tac}"
 LOCATION="${LOCATION:-eastus2}"
 CREATED_BY="${CREATED_BY:-$(az account show --query user.name -o tsv 2>/dev/null || echo "unknown")}"
+ENABLE_NODE_WORKSHOP="${ENABLE_NODE_WORKSHOP:-false}"
 SITE_DIR="$(cd "$(dirname "$0")" && pwd)"
 STAGE_DIR="$(mktemp -d)"
 
@@ -17,15 +18,24 @@ trap cleanup EXIT
 stage_static_site() {
   rsync -a --delete \
     --include '/index.html' \
+    --include '/config.js' \
     --include '/app.js' \
     --include '/styles.css' \
     --include '/assets/' \
     --include '/assets/***' \
     --exclude '*' \
     "$SITE_DIR"/ "$STAGE_DIR"/
+
+  sed "s/enableNode: false/enableNode: $ENABLE_NODE_WORKSHOP/" \
+    "$SITE_DIR/config.js" > "$STAGE_DIR/config.js"
 }
 
 # ── prereq checks ────────────────────────────────────────────────────────────
+
+if [[ "$ENABLE_NODE_WORKSHOP" != "true" && "$ENABLE_NODE_WORKSHOP" != "false" ]]; then
+  echo "Error: ENABLE_NODE_WORKSHOP must be 'true' or 'false'." >&2
+  exit 1
+fi
 
 if ! command -v az &>/dev/null; then
   echo "Error: Azure CLI (az) is not installed." >&2

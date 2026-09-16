@@ -15,7 +15,7 @@ const chapters = [
       ],
       node: [
         ["Call", "A caller dials your Twilio number."],
-        ["TAC", "TACFastAPIServer handles webhooks and WebSocket connections."],
+        ["TAC", "TACServer handles webhooks and WebSocket connections."],
         ["Handler", "onMessageReady receives transcribed caller speech."],
         ["Gemini", "Your handler calls Gemini Flash and returns a reply."],
         ["Voice", "TAC routes the reply back through the voice channel."]
@@ -29,7 +29,7 @@ const chapters = [
         instructions: [
           "Open the TAC sample repo in a separate tab.",
           "Keep this workshop tab open as your checklist and code guide.",
-          "Use the builder drawer to choose the agent name, persona, voice, and model."
+          "Use the prompt builder to choose a name, persona, and model; later you will copy its prompt into SYSTEM_PROMPT and set the matching .env values."
         ],
         codeLabel: "Reference repo",
         code: "https://github.com/twilio/twilio-agent-connect-python"
@@ -72,7 +72,7 @@ const chapters = [
         ],
         codeLabel: "Terminal",
         code:
-          "git clone https://github.com/rishabkumar7/twilio-cr-tac-workshop\ncd twilio-cr-tac-workshop\npython3 -m venv .venv\nsource .venv/bin/activate\npip install twilio-agent-connect[server] google-genai python-dotenv"
+          "git clone https://github.com/rishabkumar7/twilio-cr-tac-workshop\ncd twilio-cr-tac-workshop\npython3 -m venv .venv\nsource .venv/bin/activate\npip install \"twilio-agent-connect[server]==2.4.0\" \"google-genai==2.23.0\" \"python-dotenv==1.2.3\""
       },
       {
         title: "Configure Environment",
@@ -137,7 +137,7 @@ const chapters = [
       node: [
         ["Call", "A caller dials your Twilio number."],
         ["Relay", "Twilio opens a WebSocket and streams transcribed speech."],
-        ["TAC", "TACFastAPIServer absorbs the webhook and WebSocket complexity."],
+        ["TAC", "TACServer absorbs the webhook and WebSocket complexity."],
         ["Handler", "onMessageReady fires with the caller's words as a string."],
         ["LLM", "Your handler calls any model and returns the reply text."]
       ]
@@ -196,9 +196,9 @@ const chapters = [
       }
     ],
     quiz: {
-      question: "What does on_message_ready receive as its first argument?",
-      options: ["A raw WebSocket frame", "Transcribed caller speech as a string", "A Twilio request signature"],
-      answer: "Transcribed caller speech as a string"
+      question: "What caller information does TAC expose to your message handler?",
+      options: ["A raw audio buffer", "Transcribed caller speech as text", "A Twilio request signature"],
+      answer: "Transcribed caller speech as text"
     }
   },
   {
@@ -234,7 +234,7 @@ const chapters = [
           "The workshop swaps the manual FastAPI WebSocket loop for a TACFastAPIServer."
         ],
         codeLabel: "Install TAC",
-        code: "pip install twilio-agent-connect[server]"
+        code: "pip install \"twilio-agent-connect[server]==2.4.0\""
       },
       {
         title: "Configure the Environment",
@@ -254,8 +254,10 @@ const chapters = [
         body:
           "Create a TAC instance in relay-only mode and attach a VoiceChannel. This replaces the manual FastAPI app, the /twiml route, and the raw WebSocket handler.",
         instructions: [
+          "Create main.py with this first code block, then append each later main.py block in order.",
           "Import the TAC session and memory types used by the callback signature.",
           "Load config from environment variables with TACConfig.from_env().",
+          "If you customized the prompt builder, replace the default SYSTEM_PROMPT text with your copied prompt.",
           "Assert that Conversation Orchestrator is disabled, then create VoiceChannel."
         ],
         codeLabel: "main.py",
@@ -267,6 +269,7 @@ const chapters = [
         body:
           "A Gemini tool can be an ordinary typed Python function. Gemini uses its name, docstring, and parameter types to decide when to call it and which arguments to provide.",
         instructions: [
+          "Append this block to main.py; do not replace the initialization code from the previous step.",
           "Define lookup_customer with a typed customer_id parameter and a clear docstring.",
           "Return JSON-serializable data so Gemini can incorporate the result into its answer.",
           "Use the fake record for the workshop; a real app must call an authenticated customer system.",
@@ -281,6 +284,7 @@ const chapters = [
         body:
           "Add lookup_customer to the Gemini chat configuration. Gemini automatically calls it when account data is needed, then the handler streams Gemini's grounded response through VoiceChannel.",
         instructions: [
+          "Append this block to main.py after lookup_customer.",
           "Register the handler with tac.on_message_ready().",
           "Pass lookup_customer in the tools list and stream the final Gemini response.",
           "Use context.conversation_id to key state, then clean it up with tac.on_conversation_ended()."
@@ -294,6 +298,7 @@ const chapters = [
         body:
           "TACFastAPIServer mounts the webhook and WebSocket routes automatically. Replace the uvicorn main:app invocation with the new server startup.",
         instructions: [
+          "Append this final block to main.py.",
           "Create the TACFastAPIServer, passing tac and the voice channel.",
           "Start the server inside a __main__ guard, matching the relay-only example.",
           "TAC listens on port 8000 by default; confirm the Twilio voice webhook is the ngrok domain plus /twiml using HTTP POST."
@@ -304,8 +309,8 @@ const chapters = [
       }
     ],
     quiz: {
-      question: "What does TAC's on_message_ready handler receive as its first argument?",
-      options: ["A raw WebSocket frame", "Transcribed caller speech as text", "A Twilio request signature"],
+      question: "What caller information does TAC expose to your message handler?",
+      options: ["A raw audio buffer", "Transcribed caller speech as text", "A Twilio request signature"],
       answer: "Transcribed caller speech as text"
     }
   }
@@ -315,20 +320,25 @@ const nodeCodeOverrides = {
   "0:3": {
     label: "Terminal",
     code:
-      "git clone https://github.com/rishabkumar7/twilio-cr-tac-workshop\ncd twilio-cr-tac-workshop\nnpm init -y\nnpm pkg set type=module scripts.start=\"node server.js\"\nnpm install twilio-agent-connect @google/genai dotenv"
+      "git clone https://github.com/rishabkumar7/twilio-cr-tac-workshop\ncd twilio-cr-tac-workshop\nnpm init -y\nnpm pkg set type=module scripts.start=\"node server.js\"\nnpm install twilio-agent-connect@2.3.0 @google/genai@2.22.0 dotenv@17.4.2"
   },
   "0:6": {
     label: "Terminal",
-    code: "ngrok http 8080\n\nTWILIO_VOICE_PUBLIC_DOMAIN=\"your-ngrok-domain.ngrok-free.app\"\nVOICE_WEBHOOK=\"https://your-ngrok-domain.ngrok-free.app/twiml\""
+    code: "ngrok http 8000\n\nTWILIO_VOICE_PUBLIC_DOMAIN=\"your-ngrok-domain.ngrok-free.app\"\nVOICE_WEBHOOK=\"https://your-ngrok-domain.ngrok-free.app/twiml\""
+  },
+  "1:2": {
+    label: "Handler signature",
+    code:
+      "tac.onMessageReady(async ({ conversationId, message, memory, session }) => {\n  const convId = String(conversationId);\n  return `You said: ${message}`;\n});"
   },
   "2:0": {
     label: "Install TAC",
-    code: "npm install twilio-agent-connect"
+    code: "npm install twilio-agent-connect@2.3.0"
   },
   "2:2": {
     label: "server.js",
     code:
-      "import \"dotenv/config\";\nimport { GoogleGenAI } from \"@google/genai\";\nimport { TAC, TACConfig } from \"twilio-agent-connect\";\nimport { VoiceChannel } from \"twilio-agent-connect/channels/voice\";\nimport { TACFastAPIServer } from \"twilio-agent-connect/server\";\n\nconst MODEL = process.env.GEMINI_MODEL || \"gemini-2.5-flash\";\nconst AGENT_NAME = process.env.AGENT_NAME || \"Ava\";\nconst ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });\n\nconst SYSTEM_PROMPT = `\nYou are ${AGENT_NAME}, a helpful voice AI agent on a live phone call.\nSpeak in short, natural sentences. Ask one question at a time.\nUse lookupCustomer when the caller asks about an account.\nAsk for their customer ID if they have not provided it.\nDo not use markdown, bullet points, links, or code blocks.\n`.trim();\n\nconst tac = new TAC({ config: TACConfig.fromEnv() });\nconst voiceChannel = new VoiceChannel(tac);"
+      "import \"dotenv/config\";\nimport { GoogleGenAI } from \"@google/genai\";\nimport { TAC, TACConfig, TACServer, VoiceChannel } from \"twilio-agent-connect\";\n\nconst MODEL = process.env.GEMINI_MODEL || \"gemini-2.5-flash\";\nconst AGENT_NAME = process.env.AGENT_NAME || \"Ava\";\nconst ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });\n\nconst SYSTEM_PROMPT = `\nYou are ${AGENT_NAME}, a helpful voice AI agent on a live phone call.\nSpeak in short, natural sentences. Ask one question at a time.\nUse lookupCustomer when the caller asks about an account.\nAsk for their customer ID if they have not provided it.\nDo not use markdown, bullet points, links, or code blocks.\n`.trim();\n\nconst tac = await TAC.create({ config: TACConfig.fromEnv() });\nconst voiceChannel = new VoiceChannel(tac);\ntac.registerChannel(voiceChannel);"
   },
   "2:3": {
     label: "server.js",
@@ -338,12 +348,12 @@ const nodeCodeOverrides = {
   "2:4": {
     label: "server.js",
     code:
-      "const sessions = new Map();\n\nasync function handleMessageReady(message, context, memory) {\n  const convId = context.conversation_id;\n\n  if (!sessions.has(convId)) {\n    sessions.set(convId, ai.chats.create({\n      model: MODEL,\n      config: {\n        systemInstruction: SYSTEM_PROMPT,\n        tools: [{ functionDeclarations: [lookupCustomerDeclaration] }],\n      },\n    }));\n  }\n\n  const chat = sessions.get(convId);\n  try {\n    let response = await chat.sendMessage({ message });\n    for (const call of response.functionCalls || []) {\n      if (call.name !== \"lookupCustomer\") continue;\n      const customerId = String(call.args?.customerId || \"\");\n      const output = lookupCustomer(customerId);\n      response = await chat.sendMessage({\n        message: [{\n          functionResponse: {\n            id: call.id,\n            name: call.name,\n            response: { output },\n          },\n        }],\n      });\n    }\n    return (response.text || \"I am sorry, could you say that again?\").trim();\n  } catch (error) {\n    console.error(\"Gemini error:\", error);\n    return \"I had trouble thinking through that. Could you repeat it?\";\n  }\n}\n\ntac.onMessageReady(handleMessageReady);"
+      "const sessions = new Map();\n\ntac.onMessageReady(async ({ conversationId, message }) => {\n  const convId = String(conversationId);\n\n  if (!sessions.has(convId)) {\n    sessions.set(convId, ai.chats.create({\n      model: MODEL,\n      config: {\n        systemInstruction: SYSTEM_PROMPT,\n        tools: [{ functionDeclarations: [lookupCustomerDeclaration] }],\n      },\n    }));\n  }\n\n  const chat = sessions.get(convId);\n  try {\n    let response = await chat.sendMessage({ message });\n    for (const call of response.functionCalls || []) {\n      if (call.name !== \"lookupCustomer\") continue;\n      const customerId = String(call.args?.customerId || \"\");\n      const output = lookupCustomer(customerId);\n      response = await chat.sendMessage({\n        message: [{\n          functionResponse: {\n            id: call.id,\n            name: call.name,\n            response: { output },\n          },\n        }],\n      });\n    }\n    return (response.text || \"I am sorry, could you say that again?\").trim();\n  } catch (error) {\n    console.error(\"Gemini error:\", error);\n    return \"I had trouble thinking through that. Could you repeat it?\";\n  }\n});"
   },
   "2:5": {
     label: "server.js",
     code:
-      "const server = new TACFastAPIServer({\n  tac,\n  voiceChannel,\n});\nserver.start();"
+      "const server = new TACServer(tac);\nawait server.start();"
   }
 };
 
@@ -354,12 +364,12 @@ const nodeTextOverrides = {
     instructions: [
       "Open the TAC Python sample repo in a separate tab for reference.",
       "Keep this workshop tab open as your checklist and code guide.",
-      "Use the builder drawer to choose the agent name, persona, voice, and model."
+      "Use the prompt builder to choose a name, persona, and model; later you will copy its prompt into SYSTEM_PROMPT and set the matching .env values."
     ]
   },
   "0:1": {
     instructions: [
-      "Node.js 20 or newer.",
+      "Node.js 22.13 or newer (required by the current TAC SDK).",
       "A Twilio account; the next step walks through buying a Voice-capable number.",
       "A Twilio API Key and API Secret from the Console.",
       "A Google AI Studio API key.",
@@ -386,19 +396,20 @@ const nodeTextOverrides = {
   },
   "0:6": {
     instructions: [
-      "Start ngrok forwarding to port 8080.",
+      "Start ngrok forwarding to TAC's default port, 8000.",
       "Copy the hostname only (no https://) into TWILIO_VOICE_PUBLIC_DOMAIN in .env.",
       "Open the purchased number in Twilio Console and set A call comes in to Webhook, https://your-ngrok-domain.ngrok-free.app/twiml, HTTP POST.",
       "Leave ngrok running — TAC needs the tunnel active when calls come in."
     ]
   },
   "1:2": {
+    title: "The onMessageReady Contract",
     body:
-      "Your entire integration is one async function. TAC calls it with three arguments and speaks whatever string you return back to the caller.",
+      "Register one async callback. TAC passes a structured object containing the transcribed message and conversation ID, then speaks the string you return.",
     instructions: [
       "message — the caller's transcribed speech as a plain string.",
-      "context — a ConversationSession object; use context.conversation_id to key per-call state.",
-      "memory — Conversation Memory data (None in relay-only mode)."
+      "conversationId — use this value to key per-call state.",
+      "memory and session — optional conversation context supplied in the callback object."
     ]
   },
   "1:3": {
@@ -414,7 +425,7 @@ const nodeTextOverrides = {
     instructions: [
       "TAC is not PCI compliant or HIPAA eligible — do not use it in regulated workflows.",
       "Supported LLM backends include AWS Bedrock, Azure AI Foundry, OpenAI, and generic providers.",
-      "The workshop uses TACFastAPIServer to handle all webhook and WebSocket plumbing."
+      "The workshop uses TACServer to handle all webhook and WebSocket plumbing."
     ]
   },
   "2:1": {
@@ -426,17 +437,20 @@ const nodeTextOverrides = {
   },
   "2:2": {
     body:
-      "Create a TAC instance, attach a VoiceChannel, and wire up a TACFastAPIServer. This is the entire server setup.",
+      "Create a TAC instance asynchronously, register a VoiceChannel, and import TACServer. This is the entire server setup.",
     instructions: [
-      "Import TAC, TACConfig from twilio-agent-connect; VoiceChannel and TACFastAPIServer from their subpaths.",
+      "Create server.js with this first code block, then append each later server.js block in order.",
+      "Import TAC, TACConfig, VoiceChannel, and TACServer from twilio-agent-connect.",
       "Load config from environment variables with TACConfig.fromEnv().",
-      "Pass the voice channel to TACFastAPIServer so it handles incoming calls."
+      "If you customized the prompt builder, replace the default SYSTEM_PROMPT text with your copied prompt.",
+      "Create TAC with await TAC.create(), then register the voice channel."
     ]
   },
   "2:3": {
     body:
       "Declare lookupCustomer for Gemini and provide the local function that executes the lookup.",
     instructions: [
+      "Append this block to server.js; do not replace the initialization code from the previous step.",
       "Describe the function and its customerId parameter with JSON Schema.",
       "Return plain JSON data that Gemini can use in its answer.",
       "Use the fake record for the workshop; a real app must call an authenticated customer system.",
@@ -447,32 +461,31 @@ const nodeTextOverrides = {
     body:
       "Add the lookupCustomer declaration to the Gemini chat, execute requested function calls, and send each result back to Gemini before returning its answer.",
     instructions: [
+      "Append this block to server.js after lookupCustomer.",
       "Register the handler with tac.onMessageReady().",
       "Execute lookupCustomer when Gemini returns that function call.",
-      "Use context.conversation_id to key per-call Gemini chat sessions."
+      "Use conversationId from the callback object to key per-call Gemini chat sessions."
     ]
   },
   "2:5": {
     body:
-      "TACFastAPIServer mounts webhook and WebSocket routes automatically. Call server.start() to launch.",
+      "TACServer mounts webhook and WebSocket routes automatically. Await server.start() to launch.",
     instructions: [
-      "Create the TACFastAPIServer, passing tac and the voice channel.",
-      "Call server.start() — TAC starts listening on port 8080.",
+      "Append this final block to server.js.",
+      "Create TACServer with the configured TAC instance.",
+      "Await server.start() — TAC starts listening on port 8000.",
       "Confirm the Twilio voice webhook is the ngrok domain plus /twiml using HTTP POST."
     ]
   }
 };
 
+const workshopConfig = window.WORKSHOP_CONFIG || {};
+const enableNodeWorkshop = workshopConfig.enableNode === true;
 const storageKey = "twilio-cr-tac-state-v1";
 const defaultBuilder = {
   name: "Ava",
   persona: "Helpful retail concierge",
-  voice: "Google TTS",
-  language: "en-US",
-  model: "gemini-2.5-flash",
-  toolLookup: true,
-  toolTicket: true,
-  handoff: true
+  model: "gemini-2.5-flash"
 };
 
 const state = loadState();
@@ -494,6 +507,7 @@ const builderToggle = document.querySelector("#builderToggle");
 const builderForm = document.querySelector("#builderForm");
 const prevStepButton = document.querySelector("#prevStep");
 const nextStepButton = document.querySelector("#nextStep");
+const runtimeSwitch = document.querySelector(".runtime-switch");
 const runtimeButtons = document.querySelectorAll("[data-runtime]");
 const THREE_MODULE_URL = "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 let threeModule = null;
@@ -507,7 +521,7 @@ function loadState() {
       activeChapter: parsed.activeChapter || 0,
       activeStep: parsed.activeStep || 0,
       builder: { ...defaultBuilder, ...(parsed.builder || {}) },
-      runtime: parsed.runtime === "node" ? "node" : "python",
+      runtime: enableNodeWorkshop && parsed.runtime === "node" ? "node" : "python",
       theme: parsed.theme || "dark"
     };
   } catch {
@@ -522,6 +536,7 @@ function saveState() {
 }
 
 function renderRuntimeSwitch() {
+  runtimeSwitch.hidden = !enableNodeWorkshop;
   runtimeButtons.forEach((button) => {
     const active = button.dataset.runtime === state.runtime;
     button.classList.toggle("is-active", active);
@@ -559,7 +574,7 @@ function escapeHtml(value) {
 }
 
 function getRuntimeStep(step, chapterIndex = activeChapter, stepIndex = activeStep) {
-  if (state.runtime !== "node") return step;
+  if (!enableNodeWorkshop || state.runtime !== "node") return step;
 
   const key = stepKey(chapterIndex, stepIndex);
   const textOverride = nodeTextOverrides[key] || {};
@@ -802,12 +817,13 @@ function renderSideRail() {
 
   stepList.innerHTML = chapter.steps
     .map((step, index) => {
+      const runtimeStep = getRuntimeStep(step, activeChapter, index);
       const done = isStepDone(activeChapter, index);
       const current = index === activeStep;
       return `
         <button class="step-link ${done ? "is-done" : ""}" type="button" data-step="${index}" aria-current="${current}">
           <span class="step-state">${done ? icon("check") : index + 1}</span>
-          <span>${escapeHtml(step.title)}</span>
+          <span>${escapeHtml(runtimeStep.title)}</span>
         </button>
       `;
     })
@@ -815,10 +831,12 @@ function renderSideRail() {
 }
 
 function renderVoiceVisual() {
+  const serverName = state.runtime === "node" ? "TACServer" : "TACFastAPIServer";
+  const handlerName = state.runtime === "node" ? "onMessageReady" : "on_message_ready";
   return `
     <div class="mission-overview" aria-label="Voice AI agent system overview">
       <div class="chapter-kicker">System overview</div>
-      <svg class="mission-overview-svg" viewBox="0 0 940 360" role="img" aria-label="Caller reaches Twilio Voice, ConversationRelay opens a WebSocket to TAC, TAC calls your on_message_ready handler which asks Gemini Flash, then Twilio speaks the response back.">
+      <svg class="mission-overview-svg" viewBox="0 0 940 360" role="img" aria-label="Caller reaches Twilio Voice, ConversationRelay opens a WebSocket to TAC, TAC calls your ${handlerName} handler which asks Gemini Flash, then Twilio speaks the response back.">
         <defs>
           <marker id="missionArrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
             <path d="M0 0 L10 5 L0 10z" class="mission-arrow-head" />
@@ -888,7 +906,7 @@ function renderVoiceVisual() {
             <div xmlns="http://www.w3.org/1999/xhtml" class="arch-lucide-icon arch-lucide-icon-hot">${icon("server")}</div>
           </foreignObject>
           <text x="110" y="72" text-anchor="middle">TAC Server</text>
-          <text x="110" y="94" text-anchor="middle" class="mission-node-small">TACFastAPIServer</text>
+          <text x="110" y="94" text-anchor="middle" class="mission-node-small">${serverName}</text>
         </g>
 
         <g class="mission-node mission-node-muted" transform="translate(405 236)">
@@ -897,7 +915,7 @@ function renderVoiceVisual() {
             <div xmlns="http://www.w3.org/1999/xhtml" class="arch-lucide-icon">${icon("wrench")}</div>
           </foreignObject>
           <text x="108" y="42" text-anchor="middle">Tools</text>
-          <text x="108" y="60" text-anchor="middle" class="mission-node-small">lookup, tickets</text>
+          <text x="108" y="60" text-anchor="middle" class="mission-node-small">lookup</text>
         </g>
 
         <g class="mission-node mission-node-gemini" transform="translate(690 238)">
@@ -912,6 +930,7 @@ function renderVoiceVisual() {
 }
 
 function renderArchitecture() {
+  const serverName = state.runtime === "node" ? "TACServer" : "TACFastAPIServer";
   return `
     <div class="architecture-panel" aria-label="Architecture diagram">
       <div class="chapter-kicker">Architecture</div>
@@ -980,7 +999,7 @@ function renderArchitecture() {
               <div xmlns="http://www.w3.org/1999/xhtml" class="arch-lucide-icon arch-lucide-icon-hot">${icon("server")}</div>
             </foreignObject>
             <text x="140" y="46" text-anchor="middle">TAC Server</text>
-            <text x="140" y="68" text-anchor="middle" class="arch-svg-small">TACFastAPIServer</text>
+            <text x="140" y="68" text-anchor="middle" class="arch-svg-small">${serverName}</text>
           </g>
 
           <g class="arch-svg-node arch-svg-tools" transform="translate(410 196)">
@@ -1006,9 +1025,10 @@ function renderArchitecture() {
 
 function renderFlow(chapter) {
   const handlerName = state.runtime === "node" ? "onMessageReady" : "on_message_ready";
+  const serverName = state.runtime === "node" ? "TACServer" : "TACFastAPIServer";
   const fallback = [
     ["Call", "A caller dials your Twilio number."],
-    ["TAC", "TACFastAPIServer handles webhooks and WebSocket connections."],
+    ["TAC", `${serverName} handles webhooks and WebSocket connections.`],
     ["Handler", `${handlerName} receives transcribed caller speech.`],
     ["Gemini", "Your handler calls Gemini Flash and returns a reply."],
     ["Voice", "TAC routes the reply back through the voice channel."]
@@ -1060,6 +1080,7 @@ function renderLessonStep(step) {
       <p class="lesson-lead">${escapeHtml(step.body)}</p>
       ${renderInstructionCards(step.instructions)}
       ${renderCode(step)}
+      ${activeStep === chapters[activeChapter].steps.length - 1 ? renderQuiz(chapters[activeChapter]) : ""}
     </div>
   `;
 }
@@ -1091,7 +1112,7 @@ function renderMissionStep(step) {
       ${renderVoiceVisual()}
       <p class="mission-lead">
         In this workshop, you'll build a <strong>voice AI agent</strong> using Twilio Agent Connect (TAC).
-        TAC handles all the Twilio plumbing — you write one handler function that calls Gemini and returns a reply.
+        TAC handles all the Twilio plumbing — you write one handler function that calls Gemini and produces a reply.
       </p>
 
       <article class="callout-card">
@@ -1121,7 +1142,7 @@ function renderMissionStep(step) {
             <div>
               <div class="step-kicker">Step 2</div>
               <strong>Use the builder drawer</strong>
-              <p>Pick your agent name, persona, voice, and model — the builder generates a system prompt you can paste in later.</p>
+              <p>Pick your agent name, persona, and model. Copy the generated text into SYSTEM_PROMPT, then set AGENT_NAME and GEMINI_MODEL in .env.</p>
             </div>
           </article>
         </div>
@@ -1129,7 +1150,7 @@ function renderMissionStep(step) {
       </div>
 
       <aside class="note">
-        <strong>All you need is a GitHub account and a Twilio account.</strong> Get both set up before the coding chapter begins.
+        <strong>You will also need Google AI Studio and ngrok accounts.</strong> The next step lists every account and local tool.
       </aside>
     </div>
   `;
@@ -1183,6 +1204,7 @@ function renderConversationFlowStep(step) {
         </div>
         <p id="simOutput">Pick a caller move to preview what the app should do.</p>
       </div>
+      ${renderQuiz(chapters[activeChapter])}
     </div>
   `;
 }
@@ -1694,44 +1716,27 @@ function getBuilderValues() {
   return {
     name: formData.get("name") || "Ava",
     persona: formData.get("persona") || defaultBuilder.persona,
-    voice: formData.get("voice") || defaultBuilder.voice,
-    language: formData.get("language") || defaultBuilder.language,
-    model: formData.get("model") || defaultBuilder.model,
-    toolLookup: builderForm.elements.toolLookup.checked,
-    toolTicket: builderForm.elements.toolTicket.checked,
-    handoff: builderForm.elements.handoff.checked
+    model: formData.get("model") || defaultBuilder.model
   };
 }
 
 function updateBuilderReadout() {
   const builder = state.builder;
-  const toolCount = [builder.toolLookup, builder.toolTicket].filter(Boolean).length;
   document.querySelector("#agentNameReadout").textContent = builder.name;
-  document.querySelector("#agentVoiceReadout").textContent = builder.voice;
+  document.querySelector("#agentPersonaReadout").textContent = builder.persona;
   document.querySelector("#agentModelReadout").textContent = builder.model;
-  document.querySelector("#agentToolsReadout").textContent = `${toolCount} / 2`;
-  document.querySelector("#agentHandoffReadout").textContent = builder.handoff ? "Yes" : "No";
   document.querySelector("#promptPreview").textContent = makePrompt(builder);
 }
 
 function makePrompt(builder) {
-  const tools = [];
-  if (builder.toolLookup) tools.push("customer lookup");
-  if (builder.toolTicket) tools.push("ticket creation");
-  const toolLine = tools.length ? `You can use these tools: ${tools.join(", ")}.` : "You do not have tools enabled.";
-  const handoffLine = builder.handoff
-    ? "If the caller asks for a human, billing changes, legal advice, or anything unsafe, offer a warm handoff."
-    : "Do not offer human handoff unless the workshop instructor tells you to.";
-
+  const lookupTool = state.runtime === "node" ? "lookupCustomer" : "lookup_customer";
   return [
     `You are ${builder.name}, a ${builder.persona.toLowerCase()} on a live phone call.`,
-    `Use ${builder.model} and speak in ${builder.language}.`,
-    `Voice: ${builder.voice}.`,
     "Keep replies short, natural, and easy to understand aloud.",
     "Ask one question at a time.",
     "Do not use markdown, bullet points, links, or code blocks.",
-    toolLine,
-    handoffLine
+    `Use ${lookupTool} when the caller asks about an account.`,
+    "Ask for the caller's customer ID if they have not provided it."
   ].join("\n");
 }
 
@@ -1793,7 +1798,8 @@ document.addEventListener("click", (event) => {
 
   const runtimeButton = event.target.closest("[data-runtime]");
   if (runtimeButton) {
-    state.runtime = runtimeButton.dataset.runtime === "node" ? "node" : "python";
+    const requestedRuntime = runtimeButton.dataset.runtime === "node" ? "node" : "python";
+    state.runtime = requestedRuntime === "node" && enableNodeWorkshop ? "node" : "python";
     renderAll({ keepScroll: true });
     return;
   }

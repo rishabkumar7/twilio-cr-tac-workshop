@@ -20,7 +20,7 @@
         <nav class="chapter-tabs" aria-label="Workshop chapters" id="chapterTabs"></nav>
 
         <div class="top-actions">
-          <div class="runtime-switch" role="group" aria-label="Workshop runtime">
+          <div class="runtime-switch" role="group" aria-label="Workshop runtime" hidden>
             <button type="button" data-runtime="python">Python</button>
             <button type="button" data-runtime="node">Node.js</button>
           </div>
@@ -55,20 +55,16 @@
               <dd id="agentNameReadout">Ava</dd>
             </div>
             <div>
-              <dt>Voice</dt>
-              <dd id="agentVoiceReadout">Google TTS</dd>
+              <dt>Persona</dt>
+              <dd id="agentPersonaReadout">Helpful retail concierge</dd>
             </div>
             <div>
               <dt>Model</dt>
               <dd id="agentModelReadout">gemini-2.5-flash</dd>
             </div>
             <div>
-              <dt>Tools</dt>
-              <dd id="agentToolsReadout">2 / 2</dd>
-            </div>
-            <div>
-              <dt>Handoff</dt>
-              <dd id="agentHandoffReadout">Yes</dd>
+              <dt>Tool</dt>
+              <dd>Customer lookup</dd>
             </div>
           </dl>
           <div class="badges" aria-label="Earned badges" id="badgeList"></div>
@@ -83,7 +79,7 @@
         <div class="builder-header">
           <div>
             <span class="chapter-kicker">Builder</span>
-            <h2>Agent Config</h2>
+            <h2>Prompt Builder</h2>
           </div>
           <button class="icon-button" type="button" id="closeBuilder" aria-label="Close builder" title="Close builder">
             <span data-icon="x" aria-hidden="true"></span>
@@ -100,29 +96,9 @@
             Personality
             <select name="persona">
               <option>Helpful retail concierge</option>
-              <option>Patient healthcare scheduler</option>
+              <option>Friendly travel planner</option>
               <option>Friendly developer advocate</option>
               <option>Calm support triage agent</option>
-            </select>
-          </label>
-
-          <label>
-            Voice
-            <select name="voice">
-              <option>Google TTS</option>
-              <option>Polly Joanna</option>
-              <option>Polly Matthew</option>
-              <option>ElevenLabs Rachel</option>
-            </select>
-          </label>
-
-          <label>
-            Language
-            <select name="language">
-              <option>en-US</option>
-              <option>en-GB</option>
-              <option>es-US</option>
-              <option>fr-CA</option>
             </select>
           </label>
 
@@ -131,29 +107,13 @@
             <select name="model">
               <option>gemini-2.5-flash</option>
               <option>gemini-2.5-flash-lite</option>
-              <option>gemini-1.5-flash</option>
+              <option>gemini-3.8-flash</option>
             </select>
           </label>
-
-          <fieldset>
-            <legend>Capabilities</legend>
-            <label class="check-row">
-              <input type="checkbox" name="toolLookup" checked />
-              <span>Customer lookup tool</span>
-            </label>
-            <label class="check-row">
-              <input type="checkbox" name="toolTicket" checked />
-              <span>Ticket creation tool</span>
-            </label>
-            <label class="check-row">
-              <input type="checkbox" name="handoff" checked />
-              <span>Human handoff</span>
-            </label>
-          </fieldset>
         </form>
 
         <div class="config-preview">
-          <div class="preview-title">Generated prompt seed</div>
+          <div class="preview-title">Generated prompt seed — copy into SYSTEM_PROMPT</div>
           <pre id="promptPreview"></pre>
           <button class="copy-button" type="button" data-copy-target="promptPreview">
             <span data-icon="copy" aria-hidden="true"></span>
@@ -172,6 +132,7 @@
       </footer>
     </div>
 
+    <script src="config.js"></script>
     <script src="app.js" defer></script>
   </body>
 </html>

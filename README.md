@@ -9,7 +9,7 @@ twilio-cr-tac-workshop/
 ├── workshop-app/       Static workshop website and deployment tooling
 ├── .env.example        Environment variable template for attendee code
 ├── main.py             Python attendees create during the workshop
-└── server.js           Node.js attendees create during the workshop
+└── server.js           Created only when the optional Node.js path is enabled
 ```
 
 Attendee code belongs at the repository root. Keep `workshop-app/` unchanged while following the workshop so the guide remains separate from the agent being built.
@@ -28,7 +28,7 @@ Then prepare the root workspace:
 cp .env.example .env
 ```
 
-Choose Python or Node.js in the workshop guide and create `main.py` or `server.js` at the repository root as directed.
+Follow the Python instructions and create `main.py` at the repository root as directed. Workshop maintainers can optionally enable the Node.js path with `ENABLE_NODE_WORKSHOP=true` during deployment.
 
 ## Workshop app development
 
