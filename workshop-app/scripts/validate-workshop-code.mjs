@@ -78,6 +78,10 @@ function forbidText(source, forbidden, name) {
 }
 
 const pythonSnippets = snippets.filter((snippet) => snippet.label === "main.py");
+const environmentSteps = snippets.filter((snippet) => snippet.label === ".env");
+if (environmentSteps.length !== 1) {
+  throw new Error(`Expected exactly one .env step, found ${environmentSteps.length}.`);
+}
 for (const snippet of pythonSnippets) {
   pythonSyntaxCheck(
     snippet.code,
@@ -96,17 +100,38 @@ const pythonFinalApp = context.chapters[2].steps
   .filter((step) => step.codeLabel === "main.py")
   .map((step) => step.code)
   .join("\n\n");
-const nodeFinalApp = ["2:2", "2:3", "2:4", "2:5"]
+const pythonCompleteApp = context.chapters[2].steps.find(
+  (step) => step.codeLabel === "Complete main.py"
+).code;
+const nodeFinalApp = ["2:1", "2:2", "2:3", "2:4"]
   .map((key) => context.nodeCodeOverrides[key].code)
   .join("\n\n");
+const nodeCompleteApp = context.nodeCodeOverrides["2:5"].code;
 
 pythonSyntaxCheck(pythonFinalApp, "assembled final Python workshop app");
+pythonSyntaxCheck(pythonCompleteApp, "complete Python workshop app");
 javascriptSyntaxCheck(nodeFinalApp, "assembled final Node.js workshop app");
+javascriptSyntaxCheck(nodeCompleteApp, "complete Node.js workshop app");
 
-requireText(context.chapters[0].steps[3].code, '"twilio-agent-connect[server]==2.4.0"', "Python install command");
-requireText(context.nodeCodeOverrides["0:3"].code, "twilio-agent-connect@2.3.0", "Node.js install command");
-requireText(context.chapters[0].steps[6].code, "ngrok http 8000", "Python ngrok command");
-requireText(context.nodeCodeOverrides["0:6"].code, "ngrok http 8000", "Node.js ngrok command");
+requireText(context.chapters[2].steps[0].code, '"twilio-agent-connect[server]==2.4.0"', "Python install command");
+requireText(context.chapters[2].steps[0].code, "python3.12 -m venv", "Python virtual environment command");
+requireText(context.nodeCodeOverrides["2:0"].code, "twilio-agent-connect@2.3.0", "Node.js install command");
+requireText(context.chapters[2].steps[8].code, "ngrok http 8000", "Python ngrok command");
+requireText(context.chapters[2].steps[7].code, "python main.py", "Python run command");
+requireText(context.chapters[2].steps[9].code, "HTTP POST", "Twilio Console webhook configuration");
+requireText(context.chapters[2].steps[10].code, "POST /twiml", "End-to-end call checkpoint");
+if (context.chapters[2].steps[11]?.troubleshooting !== true) {
+  throw new Error("Agent Connect must end with a dedicated troubleshooting step.");
+}
+requireText(appSource, "GET / → 404", "Troubleshooting table");
+requireText(appSource, "Unsigned POST /twiml → 403", "Troubleshooting table");
+requireText(appSource, "ngrok → 502 Bad Gateway", "Troubleshooting table");
+requireText(appSource, ".env change has no effect", "Troubleshooting table");
+requireText(appSource, "Trial-account call is rejected", "Troubleshooting table");
+requireText(appSource, "I had trouble thinking through that", "Troubleshooting table");
+requireText(pythonFinalApp, '"gemini-3.8-flash"', "Python primary Gemini model");
+requireText(pythonFinalApp, '"gemini-3.6-flash"', "Python Gemini fallback model");
+requireText(pythonFinalApp, "get_history()", "Python model fallback history");
 requireText(nodeFinalApp, "await TAC.create", "Node.js final app");
 requireText(nodeFinalApp, "TACServer", "Node.js final app");
 requireText(nodeFinalApp, "tac.registerChannel(voiceChannel)", "Node.js final app");
@@ -114,12 +139,24 @@ requireText(nodeFinalApp, "async ({ conversationId, message })", "Node.js final 
 forbidText(nodeFinalApp, "twilio-agent-connect/", "Node.js final app");
 forbidText(nodeFinalApp, "TACFastAPIServer", "Node.js final app");
 forbidText(appSource, "gemini-1.5-flash", "Workshop model choices");
+forbidText(appSource, "gemini-2.5-flash", "Workshop model choices");
+forbidText(appSource, "ngrok-free.app", "ngrok hostname guidance");
+forbidText(appSource, "VOICE_WEBHOOK", "Twilio Console webhook guidance");
+forbidText(appSource, "create a support ticket", "Workshop capability claims");
+forbidText(appSource, "Test memory", "Relay-only capability claims");
+forbidText(appSource, ">Checkpoint<", "Knowledge-check heading");
+requireText(appSource, ">Knowledge check<", "Knowledge-check heading");
+requireText(appSource, '"{AGENT_NAME}"', "Python prompt-builder placeholder");
+requireText(appSource, '"${AGENT_NAME}"', "Node.js prompt-builder placeholder");
+if (context.chapters[1].quiz.question === context.chapters[2].quiz.question) {
+  throw new Error("How It Works and Agent Connect must have different knowledge checks.");
+}
 requireText(configSource, "enableNode: false", "Default workshop configuration");
 requireText(appSource, "enableNodeWorkshop && parsed.runtime", "Saved runtime guard");
 requireText(appSource, "!enableNodeWorkshop || state.runtime !== \"node\"", "Node content guard");
 requireText(context.nodeTextOverrides["0:1"].instructions.join("\n"), "22.13", "Node.js prerequisites");
 requireText(
-  context.nodeCodeOverrides["1:2"].code,
+  context.nodeCodeOverrides["1:1"].code,
   "({ conversationId, message, memory, session })",
   "Node.js handler contract example"
 );

@@ -60,7 +60,7 @@
             </div>
             <div>
               <dt>Model</dt>
-              <dd id="agentModelReadout">gemini-2.5-flash</dd>
+              <dd id="agentModelReadout">gemini-3.8-flash</dd>
             </div>
             <div>
               <dt>Tool</dt>
@@ -105,15 +105,18 @@
           <label>
             Model
             <select name="model">
-              <option>gemini-2.5-flash</option>
-              <option>gemini-2.5-flash-lite</option>
               <option>gemini-3.8-flash</option>
+              <option>gemini-3.6-flash</option>
+              <option>gemini-flash-lite-latest</option>
             </select>
           </label>
         </form>
 
         <div class="config-preview">
-          <div class="preview-title">Generated prompt seed — copy into SYSTEM_PROMPT</div>
+          <p class="builder-guidance" id="builderGuidance">
+            Set AGENT_NAME and GEMINI_MODEL in .env. Paste this text inside SYSTEM_PROMPT in main.py, keeping {AGENT_NAME} exactly as shown.
+          </p>
+          <div class="preview-title" id="promptPreviewTitle">Paste into SYSTEM_PROMPT in main.py</div>
           <pre id="promptPreview"></pre>
           <button class="copy-button" type="button" data-copy-target="promptPreview">
             <span data-icon="copy" aria-hidden="true"></span>

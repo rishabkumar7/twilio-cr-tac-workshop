@@ -21,9 +21,9 @@ Deployment only stages the static app files (`index.html`, `config.js`, `app.js`
 - Interactive prompt builder for the agent name, persona, and Gemini model used by the workshop.
 - Light and dark themes.
 
-## Source Workshop Repo
+## SDK reference for maintainers
 
-The workshop content is based on the TAC sample repo:
+The workshop uses this repository as the attendee workspace. Maintainers can consult the upstream TAC Python SDK separately when updating SDK-specific examples:
 
 https://github.com/twilio/twilio-agent-connect-python
 

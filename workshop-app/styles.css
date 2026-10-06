@@ -1175,15 +1175,13 @@ dd {
   filter: drop-shadow(0 0 7px rgba(242, 74, 80, 0.6));
 }
 
-.inline-diagram,
-.call-simulator {
+.inline-diagram {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
 
-.diagram-chip,
-.call-simulator button {
+.diagram-chip {
   min-height: 38px;
   padding: 0 14px;
   border-radius: var(--radius);
@@ -1193,8 +1191,7 @@ dd {
   font-weight: 800;
 }
 
-.diagram-chip.is-active,
-.call-simulator button.is-active {
+.diagram-chip.is-active {
   color: #ffffff;
   background: var(--brand);
   border-color: rgba(255, 255, 255, 0.1);
@@ -1559,6 +1556,58 @@ dd {
   border-color: rgba(242, 74, 80, 0.45);
 }
 
+.troubleshooting-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
+}
+
+.troubleshooting-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.troubleshooting-table th,
+.troubleshooting-table td {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+.troubleshooting-table th {
+  color: var(--brand);
+  background: rgba(242, 74, 80, 0.07);
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.troubleshooting-table td {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.troubleshooting-table td:first-child {
+  width: 25%;
+  color: var(--text);
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-weight: 600;
+}
+
+.troubleshooting-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.troubleshooting-note {
+  margin-top: 0;
+}
+
 .builder-panel {
   position: fixed;
   top: 68px;
@@ -1673,6 +1722,13 @@ dd {
   border-radius: var(--radius);
   background: #050912;
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.builder-guidance {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .config-preview pre {
